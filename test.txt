@@ -1,0 +1,137 @@
+using System;
+using System.Collections.Generic;
+ 
+namespace Bag
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            /*struct of each box [ sum i0 i1 .. in ] */
+            List<List<int>> boxes = new List<List<int>>();
+            boxes.Add(new List<int>());
+            boxes[0].Add(0);
+            //index of box
+            int k = 0; int cur = 0;
+            //размер коробки
+            int size = 30;
+            //типы посылок
+            int[] parcel = { 2, 4, 5, 7, 14 };
+            Random rnd = new Random();
+            //не использованные посылок
+            List<int> acc = new List<int>();
+            //количество посылок
+            int count = Convert.ToInt32(args[0]);
+            //процент выполнения
+            int percent = count/100;
+            int curprc = 0;
+            for (int i = 0; i < count; ++i)
+            {
+                cur = parcel[rnd.Next(0, 5)];
+                //если пустая коробка
+                if (boxes[k][0] == 0)
+                {
+                    //пустая куча с посылками
+                    if (acc.Count == 0)
+                    {
+                        boxes[k][0] += cur;
+                        boxes[k].Add(cur);
+                    }
+                    else
+                    {
+                        while (true)
+                        {
+                            //заполняем на 2/3 посылками из кучи
+                            if ((boxes[k][0] + acc[acc.Count - 1] < size / 3 * 2) && acc.Count > 0)
+                            {
+                                boxes[k].Add(acc[acc.Count - 1]);
+                                boxes[k][0] += acc[acc.Count - 1];
+                                acc.RemoveAt(acc.Count - 1);
+                                if (acc.Count == 0) break;
+                            }
+                            else break;
+                        }
+                    }
+
+                }
+                else
+                {
+                    //не пустая коробка
+                    bool t = false;
+                    //идеальное совпадение с кучей
+                    for (int j = 0; j < acc.Count; ++j)
+                    {
+                        if (boxes[k][0] + acc[j] <= size && boxes[k][0] + acc[j] > size * 0.8)
+                        {
+                            boxes[k][0] += acc[j]; boxes[k].Add(acc[j]); acc.RemoveAt(j);
+                            t = true;
+                            k++; boxes.Add(new List<int>()); boxes[k].Add(0);
+                            break;
+                        }
+                    }
+                    if (t) continue;
+                    //если идеально заполняет коробку текущая посылка
+                    if (boxes[k][0] + cur <= size && boxes[k][0] + cur > size * 0.8)
+                    {
+                        boxes[k][0] += cur; boxes[k].Add(cur);
+                        k++; boxes.Add(new List<int>()); boxes[k].Add(0);
+                    }
+                    else
+                    {
+                        //пустая куча, не пустая коробка
+                        if (acc.Count == 0)
+                        {
+                            if (boxes[k][0] + cur < size)
+                            { boxes[k][0] += cur; boxes[k].Add(cur); }
+                            else
+                                acc.Add(cur);
+                        }
+                        else
+                        {
+                            t = false;
+                            //не пустая коробка не пустая куча
+                            for (int j = 0; j < acc.Count; ++j)
+                            {
+                                if (boxes[k][0] + acc[j] <= size)
+                                {
+                                    boxes[k][0] += acc[j]; boxes[k].Add(acc[j]); acc.RemoveAt(j);
+                                    if (boxes[k][0] > size * 0.8)
+                                    {
+                                        k++; boxes.Add(new List<int>()); boxes[k].Add(0); t = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (t) continue;
+                            //с кучей разобрались и с текущем элементом тоже
+                            if (boxes[k][0] + cur <= size)
+                            {
+                                boxes[k][0] += cur; boxes[k].Add(cur);
+                            }
+                            else acc.Add(cur);
+                        }
+                    }
+                }
+
+                if (i > curprc * percent)
+                { curprc++; 
+                    Console.WriteLine(curprc); }
+            }
+            Console.WriteLine("Done");
+#if result
+            for (int i = 0; i < boxes.Count; ++i)
+            {
+                Console.Write(boxes[i][0]);
+                Console.Write(": ");
+                for (int j = 1; j < boxes[i].Count; ++j)
+                {
+                    Console.Write(boxes[i][j]);
+                    Console.Write(" ");
+                }
+                Console.WriteLine();
+            }
+            //Console.Read();
+#endif
+        }
+    }
+}
