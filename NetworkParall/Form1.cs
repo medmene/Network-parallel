@@ -1,3 +1,4 @@
+﻿#define Multithread
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -13,6 +14,7 @@ using System.Windows.Forms;
 ////////////////////////////
 using System.CodeDom.Compiler;
 using Microsoft.CSharp;
+using System.Threading;
 
 namespace NetworkParall
 {
@@ -21,15 +23,35 @@ namespace NetworkParall
         string filepath = "";
         string UserSrcCode = "";
         Socket sListener;
-        public Form1()
-        {
-            InitializeComponent();
-        }
+
+        public Form1() { InitializeComponent(); }
 
         private void button1_Click(object sender, EventArgs e)
         {
+#if Multithread
+            const int port = 8888;
+            TcpListener listener = null;
+            try
+            {
+                listener = new TcpListener(IPAddress.Parse("127.0.0.1"), port);
+                listener.Start();
+
+                while (true)
+                {
+                    TcpClient client = listener.AcceptTcpClient();
+                    ClientObject clientObject = new ClientObject(client);
+
+                    // создаем новый поток для обслуживания нового клиента
+                    Thread clientThread = new Thread(new ThreadStart(clientObject.Process));
+                    clientThread.Start();
+                }
+            }
+            catch (Exception ex) { Console.WriteLine(ex.Message); }
+            finally { if (listener != null) listener.Stop(); }            
+#else
             if (UserSrcCode != "")
             {
+
                 // Устанавливаем для сокета локальную конечную точку
                 IPHostEntry ipHost = Dns.GetHostEntry("localhost");
                 IPAddress ipAddr = ipHost.AddressList[0];
@@ -126,6 +148,7 @@ namespace NetworkParall
                 catch (Exception ex) { richTextBox1.Text += (ex.ToString()); }
             }
             else richTextBox1.Text += "User code is empty!\n";
+#endif
         }
 
         private void button2_Click(object sender, EventArgs e){
