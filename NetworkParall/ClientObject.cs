@@ -10,7 +10,21 @@ namespace NetworkParall
     public class ClientObject
     {
         public TcpClient client;
-        public ClientObject(TcpClient tcpClient) { client = tcpClient; }
+        int num; //num of current client
+        Form1 fr;
+        string txtBox;
+
+        public ClientObject(TcpClient tcpClient, int _num, Form1 f,string tbox) { client = tcpClient; num = _num; fr = f; txtBox = tbox; }
+        
+        string GetMsg(NetworkStream stream){
+            byte[] data = new byte[2048]; // буфер для получаемых данных
+            // получаем сообщение
+            string msg = "";
+            int bytes = 0;
+            bytes = stream.Read(data, 0, data.Length);
+            msg = Encoding.UTF8.GetString(data, 0, bytes);             
+            return msg;
+        }
 
         public void Process()
         {
@@ -18,27 +32,79 @@ namespace NetworkParall
             try
             {
                 stream = client.GetStream();
-                byte[] data = new byte[64]; // буфер для получаемых данных
+                // Буфер для входящих данных
+                string data = "";
+                int someInt = 0;
+
                 while (true)
                 {
-                    // получаем сообщение
-                    StringBuilder builder = new StringBuilder();
-                    string msg = "";
-                    int bytes = 0;
-                    do
+                    data = GetMsg(stream);
+                    //первое присоединение
+                    if (data == "dvc_firstConn")
                     {
-                        bytes = stream.Read(data, 0, data.Length);
-                        msg = Encoding.Unicode.GetString(data, 0, bytes);
+                        byte[] msg = Encoding.UTF8.GetBytes(num.ToString() + fr.UserSrcCode);
+                        stream.Write(msg, 0, msg.Length);
                     }
-                    while (stream.DataAvailable);
+                    //отправлять результат
+                    else if (data == "sndAnsw")
+                    {
+                        if (fr.checkBox1.Checked == true)
+                        {
+                            byte[] msg = Encoding.UTF8.GetBytes("sndRes");
+                            stream.Write(msg, 0, msg.Length);
+                        }
+                        else
+                        {
+                            byte[] msg = Encoding.UTF8.GetBytes("DontSndRes");
+                            stream.Write(msg, 0, msg.Length);
+                        }
+                    }
+                    //количество посылок
+                    else if (data == "CountPrc")
+                    {
+                        if (txtBox != "" && Int32.TryParse(txtBox, out someInt))
+                        {
+                            byte[] msg = Encoding.UTF8.GetBytes(txtBox);
+                            stream.Write(msg, 0, msg.Length);
+                        }
+                        else
+                        {
+                            byte[] msg = Encoding.UTF8.GetBytes("100000");
+                            stream.Write(msg, 0, msg.Length);
+                        }
+                    }
+                    //процент выполнения
+                    else
+                    {
+                        string[] ss = data.Split('_');
+                        if (Int32.TryParse(ss[0], out someInt))
+                        {
+                            if (ss[1] == "1")
+                            {
 
-                    string message = builder.ToString();
+                                /*var settextAction = new Action(() => { fr.progressBar1.Value = someInt; });
+                                if (fr.progressBar1.InvokeRequired)
+                                    fr.progressBar1.Invoke(settextAction);
+                                else
+                                    settextAction();
+                                fr.progressBar2.Invoke(new Action(() => { fr.progressBar2.Value = someInt; }));*/
 
-                    Console.WriteLine(message);
-                    // отправляем обратно сообщение в верхнем регистре
-                    message = message.Substring(message.IndexOf(':') + 1).Trim().ToUpper();
-                    data = Encoding.Unicode.GetBytes(message);
-                    stream.Write(data, 0, data.Length);
+                                fr.progressBar2.Value = someInt;
+                            }
+                            if (ss[1] == "2") fr.progressBar3.Value = someInt;
+                            if (ss[1] == "3") fr.progressBar4.Value = someInt;
+                            byte[] msg = Encoding.UTF8.GetBytes("good");
+                            stream.Write(msg, 0, msg.Length);
+                        }
+                        //отключение
+                        else if (data.IndexOf("<TheEnd>") > -1)
+                        {
+                            fr.richTextBox1.Text += "Сервер завершил соединение с клиентом." + data[data.Length - 1];
+                            break;
+                        }
+                    }
+
+
                 }
             }
             catch (Exception ex)
@@ -51,7 +117,109 @@ namespace NetworkParall
                     stream.Close();
                 if (client != null)
                     client.Close();
+                fr.numberClt--;
             }
         }
+#if false
+            if (UserSrcCode != "")
+            {
+
+                // Устанавливаем для сокета локальную конечную точку
+                IPHostEntry ipHost = Dns.GetHostEntry("localhost");
+        IPAddress ipAddr = ipHost.AddressList[0];
+        IPEndPoint ipEndPoint = new IPEndPoint(ipAddr, 11000);
+        progressBar1.Enabled = true;
+                progressBar2.Enabled = true;
+                progressBar3.Enabled = true;
+
+                // Создаем сокет Tcp/Ip
+                sListener = new Socket(ipAddr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+                // Назначаем сокет локальной конечной точке и слушаем входящие сокеты
+                try
+                {
+                    sListener.Bind(ipEndPoint);
+                    sListener.Listen(10);
+                    int someInt = 0; //
+        int curUser = 1; //выделение номера пользователю
+                    // Начинаем слушать соединения
+                    while (true)
+                    {
+                        // Программа приостанавливается, ожидая входящее соединение
+                        Socket handler = sListener.Accept();
+        string data = null;
+
+        // Буфер для входящих данных
+        byte[] bytes = new byte[2048];
+
+        // Мы дождались клиента, пытающегося с нами соединиться
+        int bytesRec = handler.Receive(bytes);
+
+        data += Encoding.UTF8.GetString(bytes, 0, bytesRec);
+                        /////////////////////////////////////////////////////
+                        /////////////////////////////////////////////////////
+                        /////////////////////////////////////////////////////
+                        //первое присоединение
+                        if (data == "dvc_firstConn")
+                        {
+                            byte[] msg = Encoding.UTF8.GetBytes(curUser.ToString() + UserSrcCode);
+        curUser++;
+                            handler.Send(msg);
+                        }
+                        //отправлять результат
+                        else if (data == "sndAnsw")
+                        {
+                            if (checkBox1.Checked == true)
+                            {
+                                byte[] msg = Encoding.UTF8.GetBytes("sndRes");
+    handler.Send(msg);
+                            }
+                            else
+                            {
+                                byte[] msg = Encoding.UTF8.GetBytes("DontSndRes");
+handler.Send(msg);
+                            }
+                        }
+                        //количество посылок
+                        else if (data == "CountPrc")
+                        {
+                            if (textBox1.Text != "" && Int32.TryParse(textBox1.Text, out someInt))
+                            {
+                                byte[] msg = Encoding.UTF8.GetBytes(textBox1.Text);
+handler.Send(msg);
+                            }
+                            else
+                            {
+                                byte[] msg = Encoding.UTF8.GetBytes("100000");
+handler.Send(msg);
+                            }
+                        }
+                        //процент выполнения
+                        else {
+                            string[] ss = data.Split('_');
+                            if (Int32.TryParse(ss[0], out someInt))
+                            {
+                                if (ss[1] == "2") progressBar1.Value = someInt;
+                                if (ss[1] == "3") progressBar2.Value = someInt;
+                                if (ss[1] == "4") progressBar3.Value = someInt;
+                                byte[] msg = Encoding.UTF8.GetBytes("good");
+handler.Send(msg);
+                            }
+                            //отключение
+                            else if (data.IndexOf("<TheEnd>") > -1)
+                            {
+                                richTextBox1.Text += "Сервер завершил соединение с клиентом." + data[data.Length - 1];
+                                break;
+                            }
+                        }
+
+                        handler.Shutdown(SocketShutdown.Both);
+                        handler.Close();
+                    }
+                }
+                catch (Exception ex) { richTextBox1.Text += (ex.ToString()); }
+            }
+            else richTextBox1.Text += "User code is empty!\n";
+#endif
     }
 }
