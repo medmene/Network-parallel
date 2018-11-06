@@ -21,33 +21,46 @@ namespace NetworkParall
     public partial class Form1 : Form
     {
         string filepath = "";
-        string UserSrcCode = "";
-        Socket sListener;
+        public string UserSrcCode = "";
+        public int numberClt = 0;
 
         public Form1() { InitializeComponent(); }
 
         private void button1_Click(object sender, EventArgs e)
         {
 #if Multithread
-            const int port = 8888;
-            TcpListener listener = null;
-            try
+            if (UserSrcCode != "")
             {
-                listener = new TcpListener(IPAddress.Parse("127.0.0.1"), port);
-                listener.Start();
-
-                while (true)
+                const int port = 8888;
+                TcpListener listener = null;
+                try
                 {
-                    TcpClient client = listener.AcceptTcpClient();
-                    ClientObject clientObject = new ClientObject(client);
+                    listener = new TcpListener(IPAddress.Parse("127.0.0.1"), port);
+                    listener.Start();
 
-                    // создаем новый поток для обслуживания нового клиента
-                    Thread clientThread = new Thread(new ThreadStart(clientObject.Process));
-                    clientThread.Start();
+                    while (true)
+                    {
+                        TcpClient client = listener.AcceptTcpClient();
+                        numberClt++;
+                        ClientObject clientObject = new ClientObject(client, numberClt, this, textBox1.Text);
+
+                        //this.Invoke(new Action(() => clientObject.Process()));
+
+                        var bw = new BackgroundWorker();
+                        bw.WorkerReportsProgress = true;
+                        bw.DoWork += (s, e) => e.Result = BackgroundTask(bw);
+                        bw.ProgressChanged += (s, e) => DisplayProgress(e.ProgressPercentage);
+                        bw.RunWorkerCompleted += (s, e) => DisplayResult((int)e.Result);
+
+                        // создаем новый поток для обслуживания нового клиента
+                        //Thread clientThread = new Thread(new ThreadStart(clientObject.Process));
+                        //clientThread.Start();
+                    }
                 }
+                catch (Exception ex) { Console.WriteLine(ex.Message); }
+                finally { if (listener != null) listener.Stop(); }
             }
-            catch (Exception ex) { Console.WriteLine(ex.Message); }
-            finally { if (listener != null) listener.Stop(); }            
+            else { MessageBox.Show("UserCode is empty!"); }          
 #else
             if (UserSrcCode != "")
             {
@@ -167,8 +180,10 @@ namespace NetworkParall
             UserCode uc = new UserCode();
             Data.Value = "";
             uc.ShowDialog();
-            UserSrcCode = Data.Value;
-            richTextBox1.Text += "Source code loaded!\n";
+            if (Data.Value != ""){
+                UserSrcCode = Data.Value;
+                richTextBox1.Text += "Source code loaded!\n";
+            }
         }
     }
 }
