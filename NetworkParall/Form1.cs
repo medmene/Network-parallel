@@ -23,46 +23,46 @@ namespace NetworkParall
         string filepath = "";
         public string UserSrcCode = "";
         public int numberClt = 0;
+        public int progVal2 = 0;
+        public int progVal3 = 0;
+        public int progVal4 = 0;
+        bool work = true;
+        
 
-        public Form1() { InitializeComponent(); }
+        public Form1() { InitializeComponent(); timer1.Enabled = true; }
 
         private void button1_Click(object sender, EventArgs e)
         {
 #if Multithread
             if (UserSrcCode != "")
             {
+                Thread t = new Thread(new ThreadStart(GetClients));
+                t.Start();
+                button1.Enabled = false;
+#if false
                 const int port = 8888;
                 TcpListener listener = null;
                 try
                 {
                     listener = new TcpListener(IPAddress.Parse("127.0.0.1"), port);
                     listener.Start();
-
                     while (true)
                     {
                         TcpClient client = listener.AcceptTcpClient();
                         numberClt++;
-                        ClientObject clientObject = new ClientObject(client, numberClt, this, textBox1.Text);
-
-                        //this.Invoke(new Action(() => clientObject.Process()));
-
-                        var bw = new BackgroundWorker();
-                        bw.WorkerReportsProgress = true;
-                        bw.DoWork += (s, e) => e.Result = BackgroundTask(bw);
-                        bw.ProgressChanged += (s, e) => DisplayProgress(e.ProgressPercentage);
-                        bw.RunWorkerCompleted += (s, e) => DisplayResult((int)e.Result);
-
+                        ClientObject clientObject = new ClientObject(client, numberClt+1, this, textBox1.Text);
                         // создаем новый поток для обслуживания нового клиента
-                        //Thread clientThread = new Thread(new ThreadStart(clientObject.Process));
-                        //clientThread.Start();
+                        Thread clientThread = new Thread(new ThreadStart(clientObject.Process));
+                        clientThread.Start();
                     }
                 }
                 catch (Exception ex) { Console.WriteLine(ex.Message); }
                 finally { if (listener != null) listener.Stop(); }
+#endif
             }
             else { MessageBox.Show("UserCode is empty!"); }          
 #else
-            if (UserSrcCode != "")
+                if (UserSrcCode != "")
             {
 
                 // Устанавливаем для сокета локальную конечную точку
@@ -164,6 +164,31 @@ namespace NetworkParall
 #endif
         }
 
+        void GetClients()
+        {
+            const int port = 8888;
+            TcpListener listener = null;
+            try
+            {
+                listener = new TcpListener(IPAddress.Parse("127.0.0.1"), port);
+                listener.Start();
+
+                while (work)
+                {
+                    TcpClient client = listener.AcceptTcpClient();
+                    numberClt++;
+                    ClientObject clientObject = new ClientObject(client, numberClt + 1, this, textBox1.Text);
+
+                    // создаем новый поток для обслуживания нового клиента
+                    Thread clientThread = new Thread(new ThreadStart(clientObject.Process));
+                    clientThread.Start();
+                    if (numberClt == 0) { work = false; button1.Enabled = true; }
+                }
+            }
+            catch (Exception ex) { Console.WriteLine(ex.Message); }
+            finally { if (listener != null) listener.Stop(); }
+        }
+
         private void button2_Click(object sender, EventArgs e){
             OpenFileDialog od = new OpenFileDialog();
             if (od.ShowDialog() == DialogResult.OK){
@@ -184,6 +209,13 @@ namespace NetworkParall
                 UserSrcCode = Data.Value;
                 richTextBox1.Text += "Source code loaded!\n";
             }
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            progressBar2.Value = progVal2;
+            progressBar3.Value = progVal3;
+            progressBar4.Value = progVal4;
         }
     }
 }
