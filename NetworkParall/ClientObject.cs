@@ -79,20 +79,9 @@ namespace NetworkParall
                         string[] ss = data.Split('_');
                         if (Int32.TryParse(ss[0], out someInt))
                         {
-                            if (ss[1] == "1")
-                            {
-
-                                /*var settextAction = new Action(() => { fr.progressBar1.Value = someInt; });
-                                if (fr.progressBar1.InvokeRequired)
-                                    fr.progressBar1.Invoke(settextAction);
-                                else
-                                    settextAction();
-                                fr.progressBar2.Invoke(new Action(() => { fr.progressBar2.Value = someInt; }));*/
-
-                                fr.progressBar2.Value = someInt;
-                            }
-                            if (ss[1] == "2") fr.progressBar3.Value = someInt;
-                            if (ss[1] == "3") fr.progressBar4.Value = someInt;
+                            if (ss[1] == "2") fr.progVal2 = someInt;                            
+                            if (ss[1] == "3") fr.progVal3 = someInt;
+                            if (ss[1] == "4") fr.progVal4 = someInt;  
                             byte[] msg = Encoding.UTF8.GetBytes("good");
                             stream.Write(msg, 0, msg.Length);
                         }
