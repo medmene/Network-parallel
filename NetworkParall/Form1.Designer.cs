@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.button1 = new System.Windows.Forms.Button();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.progressBar2 = new System.Windows.Forms.ProgressBar();
@@ -43,6 +44,7 @@
             this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.label5 = new System.Windows.Forms.Label();
             this.textBox1 = new System.Windows.Forms.TextBox();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
             // 
             // button1
@@ -193,6 +195,10 @@
             this.textBox1.Size = new System.Drawing.Size(100, 20);
             this.textBox1.TabIndex = 15;
             // 
+            // timer1
+            // 
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -223,20 +229,21 @@
         #endregion
 
         private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.ProgressBar progressBar1;
-        private System.Windows.Forms.ProgressBar progressBar2;
+        public System.Windows.Forms.ProgressBar progressBar1;
+        public System.Windows.Forms.ProgressBar progressBar2;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.ProgressBar progressBar3;
+        public System.Windows.Forms.ProgressBar progressBar3;
         private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.ProgressBar progressBar4;
+        public System.Windows.Forms.ProgressBar progressBar4;
         private System.Windows.Forms.Button button2;
         private System.Windows.Forms.Button button3;
-        private System.Windows.Forms.RichTextBox richTextBox1;
-        private System.Windows.Forms.CheckBox checkBox1;
+        public System.Windows.Forms.RichTextBox richTextBox1;
+        public System.Windows.Forms.CheckBox checkBox1;
         private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.TextBox textBox1;
+        public System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.Timer timer1;
     }
 }
 
