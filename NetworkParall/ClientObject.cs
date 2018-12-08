@@ -4,6 +4,8 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using System.Timers;
+using System.Threading;
 
 namespace NetworkParall
 {
@@ -13,6 +15,7 @@ namespace NetworkParall
         int num; //num of current client
         Form1 fr;
         string txtBox;
+        DateTime curTime;
 
         public ClientObject(TcpClient tcpClient, int _num, Form1 f,string tbox) { client = tcpClient; num = _num; fr = f; txtBox = tbox; }
         
@@ -31,6 +34,8 @@ namespace NetworkParall
             NetworkStream stream = null;
             try
             {
+                curTime = DateTime.Now;
+                //var Date
                 stream = client.GetStream();
                 // Буфер для входящих данных
                 string data = "";
@@ -44,6 +49,7 @@ namespace NetworkParall
                     {
                         byte[] msg = Encoding.UTF8.GetBytes(num.ToString() + fr.UserSrcCode);
                         stream.Write(msg, 0, msg.Length);
+                        Thread.Sleep(1000);
                     }
                     //отправлять результат
                     else if (data == "sndAnsw")
@@ -58,6 +64,7 @@ namespace NetworkParall
                             byte[] msg = Encoding.UTF8.GetBytes("DontSndRes");
                             stream.Write(msg, 0, msg.Length);
                         }
+                        Thread.Sleep(1000);
                     }
                     //количество посылок
                     else if (data == "CountPrc")
@@ -72,10 +79,12 @@ namespace NetworkParall
                             byte[] msg = Encoding.UTF8.GetBytes("100000");
                             stream.Write(msg, 0, msg.Length);
                         }
+                        Thread.Sleep(2000);
                     }
                     //процент выполнения
                     else
                     {
+                        Thread.Sleep(1000);
                         string[] ss = data.Split('_');
                         if (Int32.TryParse(ss[0], out someInt))
                         {
@@ -88,7 +97,8 @@ namespace NetworkParall
                         //отключение
                         else if (data.IndexOf("<TheEnd>") > -1)
                         {
-                            fr.richTextBox1.Text += "Сервер завершил соединение с клиентом." + data[data.Length - 1];
+                            fr.EndClnt(num, DateTime.Now.Subtract(curTime).ToString());
+                            //fr.richTextBox1.Text += "Сервер завершил соединение с клиентом." + data[data.Length - 1];
                             break;
                         }
                     }
@@ -99,6 +109,11 @@ namespace NetworkParall
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
+                fr.numberClt--;
+                if (stream != null)
+                    stream.Close();
+                if (client != null)
+                    client.Close();
             }
             finally
             {

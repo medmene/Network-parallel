@@ -170,6 +170,7 @@
             // checkBox1
             // 
             this.checkBox1.AutoSize = true;
+            this.checkBox1.Enabled = false;
             this.checkBox1.Font = new System.Drawing.Font("Calibri", 10.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.checkBox1.Location = new System.Drawing.Point(213, 280);
             this.checkBox1.Name = "checkBox1";
@@ -177,6 +178,7 @@
             this.checkBox1.TabIndex = 13;
             this.checkBox1.Text = "Показывать результат";
             this.checkBox1.UseVisualStyleBackColor = true;
+            this.checkBox1.Visible = false;
             // 
             // label5
             // 
@@ -187,6 +189,7 @@
             this.label5.Size = new System.Drawing.Size(116, 21);
             this.label5.TabIndex = 14;
             this.label5.Text = "Размер задачи";
+            this.label5.Visible = false;
             // 
             // textBox1
             // 
@@ -194,6 +197,7 @@
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size(100, 20);
             this.textBox1.TabIndex = 15;
+            this.textBox1.Visible = false;
             // 
             // timer1
             // 
