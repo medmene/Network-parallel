@@ -34,7 +34,7 @@ namespace NetworkParall
             NetworkStream stream = null;
             try
             {
-                curTime = DateTime.Now;
+                
                 //var Date
                 stream = client.GetStream();
                 // Буфер для входящих данных
@@ -49,7 +49,7 @@ namespace NetworkParall
                     {
                         byte[] msg = Encoding.UTF8.GetBytes(num.ToString() + fr.UserSrcCode);
                         stream.Write(msg, 0, msg.Length);
-                        Thread.Sleep(1000);
+                        fr.logMsg = "Device: " + (num-1).ToString() + " conneced\n";
                     }
                     //отправлять результат
                     else if (data == "sndAnsw")
@@ -64,7 +64,6 @@ namespace NetworkParall
                             byte[] msg = Encoding.UTF8.GetBytes("DontSndRes");
                             stream.Write(msg, 0, msg.Length);
                         }
-                        Thread.Sleep(1000);
                     }
                     //количество посылок
                     else if (data == "CountPrc")
@@ -79,12 +78,20 @@ namespace NetworkParall
                             byte[] msg = Encoding.UTF8.GetBytes("100000");
                             stream.Write(msg, 0, msg.Length);
                         }
-                        Thread.Sleep(2000);
+                    }
+                    else if (data == "ProgramAssembled")
+                    {
+                        fr.logMsg = "Programm on: " + (num-1).ToString() + " assembled\n";
+                        byte[] msg = Encoding.UTF8.GetBytes("good");
+                        fr.numReady++;
+                        while (!fr.run) { }
+                        if (fr.runHost == false) fr.runHost = true;
+                        stream.Write(msg, 0, msg.Length);
+                        curTime = DateTime.Now;
                     }
                     //процент выполнения
                     else
                     {
-                        Thread.Sleep(1000);
                         string[] ss = data.Split('_');
                         if (Int32.TryParse(ss[0], out someInt))
                         {
@@ -98,11 +105,9 @@ namespace NetworkParall
                         else if (data.IndexOf("<TheEnd>") > -1)
                         {
                             fr.EndClnt(num, DateTime.Now.Subtract(curTime).ToString());
-                            //fr.richTextBox1.Text += "Сервер завершил соединение с клиентом." + data[data.Length - 1];
                             break;
                         }
                     }
-
 
                 }
             }
@@ -124,106 +129,5 @@ namespace NetworkParall
                 fr.numberClt--;
             }
         }
-#if false
-            if (UserSrcCode != "")
-            {
-
-                // Устанавливаем для сокета локальную конечную точку
-                IPHostEntry ipHost = Dns.GetHostEntry("localhost");
-        IPAddress ipAddr = ipHost.AddressList[0];
-        IPEndPoint ipEndPoint = new IPEndPoint(ipAddr, 11000);
-        progressBar1.Enabled = true;
-                progressBar2.Enabled = true;
-                progressBar3.Enabled = true;
-
-                // Создаем сокет Tcp/Ip
-                sListener = new Socket(ipAddr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
-                // Назначаем сокет локальной конечной точке и слушаем входящие сокеты
-                try
-                {
-                    sListener.Bind(ipEndPoint);
-                    sListener.Listen(10);
-                    int someInt = 0; //
-        int curUser = 1; //выделение номера пользователю
-                    // Начинаем слушать соединения
-                    while (true)
-                    {
-                        // Программа приостанавливается, ожидая входящее соединение
-                        Socket handler = sListener.Accept();
-        string data = null;
-
-        // Буфер для входящих данных
-        byte[] bytes = new byte[2048];
-
-        // Мы дождались клиента, пытающегося с нами соединиться
-        int bytesRec = handler.Receive(bytes);
-
-        data += Encoding.UTF8.GetString(bytes, 0, bytesRec);
-                        /////////////////////////////////////////////////////
-                        /////////////////////////////////////////////////////
-                        /////////////////////////////////////////////////////
-                        //первое присоединение
-                        if (data == "dvc_firstConn")
-                        {
-                            byte[] msg = Encoding.UTF8.GetBytes(curUser.ToString() + UserSrcCode);
-        curUser++;
-                            handler.Send(msg);
-                        }
-                        //отправлять результат
-                        else if (data == "sndAnsw")
-                        {
-                            if (checkBox1.Checked == true)
-                            {
-                                byte[] msg = Encoding.UTF8.GetBytes("sndRes");
-    handler.Send(msg);
-                            }
-                            else
-                            {
-                                byte[] msg = Encoding.UTF8.GetBytes("DontSndRes");
-handler.Send(msg);
-                            }
-                        }
-                        //количество посылок
-                        else if (data == "CountPrc")
-                        {
-                            if (textBox1.Text != "" && Int32.TryParse(textBox1.Text, out someInt))
-                            {
-                                byte[] msg = Encoding.UTF8.GetBytes(textBox1.Text);
-handler.Send(msg);
-                            }
-                            else
-                            {
-                                byte[] msg = Encoding.UTF8.GetBytes("100000");
-handler.Send(msg);
-                            }
-                        }
-                        //процент выполнения
-                        else {
-                            string[] ss = data.Split('_');
-                            if (Int32.TryParse(ss[0], out someInt))
-                            {
-                                if (ss[1] == "2") progressBar1.Value = someInt;
-                                if (ss[1] == "3") progressBar2.Value = someInt;
-                                if (ss[1] == "4") progressBar3.Value = someInt;
-                                byte[] msg = Encoding.UTF8.GetBytes("good");
-handler.Send(msg);
-                            }
-                            //отключение
-                            else if (data.IndexOf("<TheEnd>") > -1)
-                            {
-                                richTextBox1.Text += "Сервер завершил соединение с клиентом." + data[data.Length - 1];
-                                break;
-                            }
-                        }
-
-                        handler.Shutdown(SocketShutdown.Both);
-                        handler.Close();
-                    }
-                }
-                catch (Exception ex) { richTextBox1.Text += (ex.ToString()); }
-            }
-            else richTextBox1.Text += "User code is empty!\n";
-#endif
     }
 }
